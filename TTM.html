@@ -138,6 +138,7 @@ function addNameFiled(parentId, question_idx) {
     newElement.setAttribute('type', "text");
     newElement.setAttribute('id', "question"+question_idx+"_participant");
 	newElement.setAttribute('style', "display: block; float:left; background: white");
+	newElement.setAttribute('placeholder', "Speaker Name");
 	newElement.onkeyup = function() { recordName("question"+question_idx)};
 	newElement.onfocus = function() { this.style.background="white"}
     p.appendChild(newElement);
