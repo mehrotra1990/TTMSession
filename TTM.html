@@ -1,0 +1,258 @@
+<head>
+<script>
+var backgroundColors = ["#ADD8E6", "Green", "Yellow", "Red"];
+var MAX_COLOR = 3;
+var INITIAL_TT_TIME = 60000;
+var TT_CHANGE_INTERVAL = 30000;
+var currColor = 0;
+var timeToRecord;
+var participantsArray = [];
+var currName="";
+var startTime;
+var endTime;
+var currTimer;
+
+var questions = [];
+	
+var timingReport = new Map();
+
+function millisToMinutesAndSeconds(millis) {
+  var minutes = Math.floor(millis / 60000);
+  var seconds = ((millis % 60000) / 1000).toFixed(0);
+  return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
+
+function changeColour() {
+	if(currColor < MAX_COLOR) {
+		currColor++;
+		document.body.style.backgroundColor = backgroundColors[currColor];
+		currTimer = setTimeout(changeColour, TT_CHANGE_INTERVAL);
+	}
+}
+
+function toggleShow(id) {
+	show_button= document.getElementById(id+"_show");
+	question_label = document.getElementById(id+"_label");
+	timer_button= document.getElementById(id+"_timer");
+	participant_field = document.getElementById(id+"_participant");
+	if(show_button.value == "Show") {
+		question_label.style.display="block";
+		show_button.value = "Hide";
+		timer_button.style.display="none";
+		participant_field.style.marginTop="0";
+		participant_field.style.marginLeft="0px";
+	} else {
+		question_label.style.display="none";
+		show_button.value = "Show";
+		timer_button.style.display="block";
+		participant_field.style.marginTop="3px";
+		participant_field.style.marginLeft="20px";
+	}
+}
+
+function resetColors() {
+	currColor=0;
+	document.body.style.backgroundColor = backgroundColors[currColor];
+}
+
+function resetAll() {
+	resetColors();
+	clearTimeout(currTimer);
+	currName = "";
+}
+
+function startStopTimer(id) {
+	timer_button=document.getElementById(id+"_timer");
+	show_button= document.getElementById(id+"_show");
+	if(timer_button.value == "Start Timer") {
+		currName = document.getElementById(id+"_participant").value;
+		if(currName.length == 0) {
+			alert("Please enter the name first");
+			document.getElementById(id+"_participant").style.background="yellow"
+			return;
+		}
+		show_button.style.display="none";
+		timer_button.value="Stop Timer";
+		timer_button.style.marginLeft = "20px";
+		currTimer = setTimeout(changeColour, INITIAL_TT_TIME);
+		startTime = new Date();
+	} else {
+		endTime = new Date()
+		timer_button.value="Start Timer";
+		show_button.style.display="block";
+		timer_button.style.marginLeft = "0";
+		saveTimingReport(currName, millisToMinutesAndSeconds(endTime.getTime() - startTime.getTime()));
+		updateTimingReportIfDisplayed();
+		resetAll();
+	}
+}
+function recordName(id){
+	participant_field = document.getElementById(id+"_participant");
+	currName=participant_field.value;	
+}
+
+function addSerialNumber(parentId, question_idx) {
+	var p = document.getElementById(parentId);
+	question_idx = question_idx + 1;
+    var newElement = document.createElement("label");
+	newElement.setAttribute('style', "display: block; float:left");
+    newElement.innerHTML = question_idx + ". ";
+    p.appendChild(newElement);
+
+}
+
+function addQuestionLabel(parentId, question, question_idx) {
+	var p = document.getElementById(parentId);
+    var newElement = document.createElement("label");
+
+    newElement.setAttribute('id', "question"+question_idx+"_label");
+	newElement.setAttribute('style', "display: none; font-size: 25; ");
+    newElement.innerHTML = "<br>" + question;
+    p.appendChild(newElement);
+}
+function addShowButton(parentId, question_idx) {
+	var p = document.getElementById(parentId);
+    var newElement = document.createElement("input");
+    newElement.setAttribute('type', "button");
+    newElement.setAttribute('id', "question"+question_idx+"_show");
+	newElement.setAttribute('style', "display: block; float:left; margin-left: 10px; margin-right: 10px");
+	newElement.setAttribute('value', "Show");
+	newElement.onclick = function() { toggleShow("question"+question_idx)};
+    p.appendChild(newElement);
+}
+
+function addTimerButton(parentId, question_idx) {
+	var p = document.getElementById(parentId);
+    var newElement = document.createElement("input");
+    newElement.setAttribute('type', "button");
+    newElement.setAttribute('id', "question"+question_idx+"_timer");
+	newElement.setAttribute('style', "display: none;");
+	newElement.setAttribute('value', "Start Timer");
+	newElement.onclick = function() { startStopTimer("question"+question_idx)};
+    p.appendChild(newElement);
+}
+
+function addNameFiled(parentId, question_idx) {
+	var p = document.getElementById(parentId);
+    var newElement = document.createElement("input");
+    newElement.setAttribute('type', "text");
+    newElement.setAttribute('id', "question"+question_idx+"_participant");
+	newElement.setAttribute('style', "display: block; float:left; background: white");
+	newElement.onkeyup = function() { recordName("question"+question_idx)};
+	newElement.onfocus = function() { this.style.background="white"}
+    p.appendChild(newElement);
+}
+
+function addEmptyDiv(parentId) {
+	var p = document.getElementById(parentId);
+    var newElement = document.createElement("div");
+	newElement.setAttribute('style', "height: 30px");
+	p.appendChild(newElement);
+}
+function addQuestions(question) {
+    // Adds an element to the document
+	parentId = "questions_div"
+	var p = document.getElementById(parentId);
+	indexToAdd = questions.length;
+	addSerialNumber(parentId, indexToAdd);
+	addShowButton(parentId, indexToAdd);
+	addTimerButton(parentId, indexToAdd);
+	addNameFiled(parentId, indexToAdd);
+	addQuestionLabel(parentId, question, indexToAdd);
+	questions.push(question);
+	addEmptyDiv(parentId);
+}
+
+function saveTimingReport(name, time) {
+	timingReport.set(name, time); 
+}
+
+function updateTimingReportIfDisplayed() {
+	var parentId = "timing_report";
+	var p = document.getElementById(parentId);
+	if(p.style.display == "block") refreshTimingReport(parentId);
+}
+
+function refreshTimingReport(parentId) {
+	var p = document.getElementById(parentId);
+	report="<table style=\"display: inline-block\">";
+	for (name of timingReport.keys())
+	{
+		report = report + "<tr>"
+		report = report + "<td>" + name + "</td> <td>" + timingReport.get(name) + "</td>";
+		report = report + "</tr>"
+	}
+	report = report + "</table>"
+	p.innerHTML = report;
+	p.style.display = "block";
+}
+
+function toggleShowTimingReport() {
+	timing_report_button =  document.getElementById("timing_report_button");
+	var parentId = "timing_report";
+	var p = document.getElementById(parentId);
+
+	if(timing_report_button.value == "Show Timing Report") {
+		refreshTimingReport(parentId)
+		p.style.display = "block";
+		timing_report_button.value="Hide Timing Report";
+	} else {
+		timing_report_button.value="Show Timing Report";
+		p.innerHTML = "";
+		p.style.display = "none";
+	}	
+}
+
+function toggleDisplayNewTopicField(pressed_button) {
+	new_topic_button =  document.getElementById("new_topic_button");
+	new_topic_field = document.getElementById("new_topic_field");
+	new_topic_submit = document.getElementById("new_topic_submit");
+	if(new_topic_button.disabled) {
+		new_topic_button.disabled = false;
+		new_topic_field.style = "display: none";
+		new_topic_submit.style = "display: none";
+		new_topic_cancel.style = "display: none";
+			if(pressed_button.id == "new_topic_cancel") {
+				new_topic_field.value = "";
+			} else if (new_topic_field.value.length != 0) {
+			//questions.push(new_topic_field.value);
+			addQuestions(new_topic_field.value);
+			new_topic_field.value = "";
+		}
+	} else {
+		new_topic_button.disabled = true;
+		new_topic_field.style = "display: block";
+		new_topic_submit.style = "display: block";
+		new_topic_cancel.style = "display: block";
+	}
+}
+function onLoadFunctions() {
+	resetAll();
+}
+
+</script>
+<style>
+.sectionPartition {
+	width: 100%;
+	height: 40px;
+}
+</style>
+</head>
+<body style="background_color:White;" onload=onLoadFunctions()>
+<div id = "container" style="width: 100%; text-align: center">
+<h1>Table Topics</h1>
+<div style="display: inline-block; text-align: center" id="questions_div"> </div>
+<div class="sectionPartition"></div>
+<input type="button" value="Show Timing Report" onclick=toggleShowTimingReport() id="timing_report_button"/>
+<div class="sectionPartition"></div>
+<div id="timing_report" style="display: none; ">
+</div>
+<div class="sectionPartition"></div>
+<div id="add_topic" style="display: inline-block">
+<input type="button" id="new_topic_button" value="Add a new table topic" onclick=toggleDisplayNewTopicField(this) />
+<textarea id="new_topic_field" style="display: none"></textarea>
+<input type="button" id="new_topic_submit" onclick=toggleDisplayNewTopicField(this) value="Add" style="display: none"/>
+<input type="button" id="new_topic_cancel" onclick=toggleDisplayNewTopicField(this) value="Cancel" style="display: none;"/>
+</div>
+</div>
+</body>
