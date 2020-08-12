@@ -222,9 +222,9 @@ function toggleDisplayNewTopicField(pressed_button) {
 		}
 	} else {
 		new_topic_button.disabled = true;
-		new_topic_field.style = "display: block";
-		new_topic_submit.style = "display: block";
-		new_topic_cancel.style = "display: block";
+		new_topic_field.style = "display: block;width: 100%; max-width: 100%";
+		new_topic_submit.style = "display: block; float:right";
+		new_topic_cancel.style = "display: block; float:right";
 	}
 }
 function onLoadFunctions() {
@@ -249,11 +249,22 @@ function onLoadFunctions() {
 <div id="timing_report" style="display: none; ">
 </div>
 <div class="sectionPartition"></div>
-<div id="add_topic" style="display: inline-block">
+<div id="add_topic" style="display: inline-block;  text-align: center">
 <input type="button" id="new_topic_button" value="Add a new table topic" onclick=toggleDisplayNewTopicField(this) />
 <textarea id="new_topic_field" style="display: none"></textarea>
 <input type="button" id="new_topic_submit" onclick=toggleDisplayNewTopicField(this) value="Add" style="display: none"/>
 <input type="button" id="new_topic_cancel" onclick=toggleDisplayNewTopicField(this) value="Cancel" style="display: none;"/>
+<p>
+<b>How to use?</b><br>
+Click on <b>Add a new table topic</b> to add the topics topics<br>
+Once added, you can enter the name of the speaker who tries to attempt the topic<br>
+Click on <b>Show</b> to show the topic to the speaker.<br>
+Click on <b>Hide</b> to hide the topic.<br>
+Click on Start Timer to start the timer. Screen turns Green at 1 min, Yellow ar 1:3 and Red at 2 mins<br>
+Once the speaker has delivered the table topics, click on <b>Stop Timer</b>.<br>
+Click on <b>Show Timing Report</b> to see the timing report of the speakers.<br>
+Want to discard all topics, simply refresh the page
+</p>
 </div>
 </div>
 </body>
